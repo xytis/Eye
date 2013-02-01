@@ -4,9 +4,8 @@
 #include <QMainWindow>
 #include <QScrollBar>
 #include <QLabel>
+#include <QDir>
 #include <QScrollArea>
-#include <QtPrintSupport/QPrinter>
-
 
 namespace Ui {
 class MainWindow;
@@ -26,19 +25,22 @@ private slots:
     void normalSize();
     void fitToWindow();
     void about();
+    void aboutPlugins();
 
 private:
     void createActions();
     void createMenus();
+    void loadPlugins();
     void updateActions();
     void scaleImage(double factor);
     void adjustScrollBar(QScrollBar *scrollBar, double factor);
 
     QScrollArea *scrollArea;
     double scaleFactor;
+    QDir pluginsDir;
+    QStringList pluginFileNames;
 
     QAction *openAct;
-    QAction *printAct;
     QAction *exitAct;
     QAction *zoomInAct;
     QAction *zoomOutAct;
@@ -46,6 +48,7 @@ private:
     QAction *fitToWindowAct;
     QAction *aboutAct;
     QAction *aboutQtAct;
+    QAction *aboutPluginsAct;
 
     QMenu *fileMenu;
     QMenu *viewMenu;

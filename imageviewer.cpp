@@ -2,12 +2,10 @@
 
 #include "ui_mainwindow.h"
 #include "imageviewer.h"
+#include "plugindialog.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
-
-#include <QtPrintSupport/QPrintDialog>
-
 
 ImageViewer::ImageViewer(QWidget *parent)
     : QMainWindow(parent)
@@ -26,6 +24,7 @@ ImageViewer::ImageViewer(QWidget *parent)
 
     createActions();
     createMenus();
+    loadPlugins();
 
     setWindowTitle(tr("Image Viewer"));
     resize(500, 400);
@@ -49,7 +48,6 @@ void ImageViewer::open()
         ui->imageLabel->setPixmap(QPixmap::fromImage(image));
         scaleFactor = 1.0;
 
-        printAct->setEnabled(true);
         fitToWindowAct->setEnabled(true);
         updateActions();
 
@@ -101,16 +99,17 @@ void ImageViewer::about()
                           "shows how to use QPainter to print an image.</p>"));
 }
 
+void ImageViewer::aboutPlugins()
+{
+    PluginDialog dialog(pluginsDir.path(), pluginFileNames, this);
+    dialog.exec();
+}
+
 void ImageViewer::createActions()
 {
     openAct = new QAction(tr("&Open..."), this);
     openAct->setShortcut(tr("Ctrl+O"));
     connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
-
-    printAct = new QAction(tr("&Print..."), this);
-    printAct->setShortcut(tr("Ctrl+P"));
-    printAct->setEnabled(false);
-    connect(printAct, SIGNAL(triggered()), this, SLOT(print()));
 
     exitAct = new QAction(tr("E&xit"), this);
     exitAct->setShortcut(tr("Ctrl+Q"));
@@ -142,13 +141,15 @@ void ImageViewer::createActions()
 
     aboutQtAct = new QAction(tr("About &Qt"), this);
     connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+
+    aboutPluginsAct = new QAction(tr("About &Plugins"), this);
+    connect(aboutPluginsAct, SIGNAL(triggered()), this, SLOT(aboutPlugins()));
 }
 
 void ImageViewer::createMenus()
 {
     fileMenu = new QMenu(tr("&File"), this);
     fileMenu->addAction(openAct);
-    fileMenu->addAction(printAct);
     fileMenu->addSeparator();
     fileMenu->addAction(exitAct);
 
@@ -162,6 +163,7 @@ void ImageViewer::createMenus()
     helpMenu = new QMenu(tr("&Help"), this);
     helpMenu->addAction(aboutAct);
     helpMenu->addAction(aboutQtAct);
+    helpMenu->addAction(aboutPluginsAct);
 
     menuBar()->addMenu(fileMenu);
     menuBar()->addMenu(viewMenu);
@@ -192,4 +194,31 @@ void ImageViewer::adjustScrollBar(QScrollBar *scrollBar, double factor)
 {
     scrollBar->setValue(int(factor * scrollBar->value()
                             + ((factor - 1) * scrollBar->pageStep()/2)));
+}
+
+void ImageViewer::loadPlugins()
+{
+
+    pluginsDir = QDir(qApp->applicationDirPath());
+
+#if defined(Q_OS_WIN)
+    if (pluginsDir.dirName().toLower() == "debug" || pluginsDir.dirName().toLower() == "release")
+        pluginsDir.cdUp();
+#elif defined(Q_OS_MAC)
+    if (pluginsDir.dirName() == "MacOS") {
+        pluginsDir.cdUp();
+        pluginsDir.cdUp();
+        pluginsDir.cdUp();
+    }
+#endif
+    pluginsDir.cd("plugins");
+
+    foreach (QString fileName, pluginsDir.entryList(QDir::Files)) {
+        QPluginLoader loader(pluginsDir.absoluteFilePath(fileName));
+        QObject *plugin = loader.instance();
+        if (plugin) {
+            pluginFileNames += fileName;
+        }
+    }
+
 }

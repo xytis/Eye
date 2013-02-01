@@ -13,9 +13,11 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-    imageviewer.cpp
+    imageviewer.cpp \
+    plugindialog.cpp
 
 HEADERS  += \
-    imageviewer.h
+    imageviewer.h \
+    plugindialog.h
 
 FORMS    += mainwindow.ui
