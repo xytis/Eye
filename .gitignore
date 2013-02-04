@@ -1,5 +1,7 @@
 #Skip QT temp files
 *.user*
+#Skip .autosave
+*.autosave*
 
 #Skip invisible files
 .*
